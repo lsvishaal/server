@@ -12,13 +12,17 @@ const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 5, // 5 requests per minute
   keyGenerator: (req: any) => {
-    // Use user ID if available, otherwise use IP
-    return req.user?.id || req.ip || 'anonymous';
+    // Use user ID if available (most reliable), otherwise use IP with IPv6 support
+    if (req.user?.id) {
+      return req.user.id;
+    }
+    // Fallback to IP address
+    return req.ip || 'anonymous';
   },
+  skip: (req: any) => !req.user, // Only apply to authenticated users
   message: 'Too many AI requests. Please wait before trying again.',
   standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req: any) => !req.user // Only apply to authenticated users
+  legacyHeaders: false
 });
 
 // All AI routes are protected
